@@ -39,10 +39,16 @@ const checkNikeStock = async (productSku, productUrl) => {
     });
 
     const $ = cheerio.load(response.data);
+    const pageText = $('body').text().toLowerCase();
 
-    // Look for stock status indicators
-    const outOfStockIndicator = $('[data-qa="pdp-buy-cta-button"]').attr('aria-disabled');
-    const inStock = outOfStockIndicator !== 'true';
+    // Check for out of stock indicators
+    const isSoldOut = pageText.includes('sold out') || pageText.includes('out of stock');
+
+    // Also check if the button is disabled
+    const buyButton = $('[data-qa="pdp-buy-cta-button"]');
+    const isButtonDisabled = buyButton.attr('aria-disabled') === 'true' || buyButton.text().toLowerCase().includes('sold out');
+
+    const inStock = !isSoldOut && !isButtonDisabled;
 
     // Try to extract available sizes
     const sizes = [];
