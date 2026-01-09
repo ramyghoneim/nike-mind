@@ -14,9 +14,6 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(bodyParser.json());
 
-// Initialize database
-db.init();
-
 // Routes
 app.use('/api/alerts', alertRoutes);
 app.use('/api/stock', stockRoutes);
