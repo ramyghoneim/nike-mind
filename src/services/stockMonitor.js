@@ -1,6 +1,7 @@
 const db = require('../db/database');
 const { checkStockAcrossRetailers } = require('./stockChecker');
 const { notifyUsersOfStock, getActiveAlerts } = require('./alertService');
+const { sendDiscordMessage, isDiscordBotReady } = require('./discordBot');
 
 let monitoringActive = false;
 const CHECK_INTERVAL = process.env.CHECK_INTERVAL_MS || 300000; // 5 minutes default
@@ -47,7 +48,7 @@ const checkProductStock = async (product) => {
     // Log the check
     const logResult = await logStockCheck(product.productId, results);
 
-    // Check if in stock and notify users
+    // Check if in stock and notify
     if (results.inStockAnywhere) {
       const inStockRetailers = results.retailers
         .filter(r => r.inStock)
@@ -55,15 +56,21 @@ const checkProductStock = async (product) => {
 
       console.log(`✅ ${product.productName} is IN STOCK at: ${inStockRetailers.join(', ')}`);
 
-      // Notify users
-      const notifications = await notifyUsersOfStock(
-        product.productId,
-        product.productName,
-        product.productUrl,
-        inStockRetailers
-      );
-
-      console.log(`Notified ${notifications.length} users`);
+      // Send Discord notification
+      const channelId = process.env.DISCORD_CHANNEL_ID;
+      if (channelId && isDiscordBotReady()) {
+        await sendDiscordMessage(
+          channelId,
+          product.productName,
+          product.productUrl,
+          inStockRetailers
+        );
+        console.log('Discord notification sent');
+      } else if (!channelId) {
+        console.warn('DISCORD_CHANNEL_ID not configured in .env');
+      } else {
+        console.warn('Discord bot not ready yet');
+      }
     } else {
       console.log(`❌ ${product.productName} is OUT OF STOCK everywhere`);
     }
@@ -79,20 +86,14 @@ const runStockCheck = async () => {
   try {
     console.log(`\n[${new Date().toISOString()}] Running stock check...`);
 
-    const activeAlerts = await getActiveAlerts();
+    // Default product from .env (Nike Mind 001)
+    const defaultProduct = {
+      productId: process.env.NIKE_PRODUCT_SKU || 'HQ4307-002',
+      productName: process.env.NIKE_PRODUCT_NAME || 'Nike Mind 001',
+      productUrl: process.env.NIKE_PRODUCT_URL || 'https://www.nike.com/t/mind-001-mens-pregame-mules-Ky4BSP5I/HQ4307-002'
+    };
 
-    if (activeAlerts.length === 0) {
-      console.log('No active alerts to check');
-      return;
-    }
-
-    console.log(`Checking ${activeAlerts.length} products...`);
-
-    for (const product of activeAlerts) {
-      await checkProductStock(product);
-      // Stagger requests to avoid hammering servers
-      await new Promise(resolve => setTimeout(resolve, 2000));
-    }
+    await checkProductStock(defaultProduct);
 
     console.log('Stock check completed\n');
   } catch (error) {

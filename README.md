@@ -38,75 +38,38 @@ npm install
 cp .env.example .env
 ```
 
-4. **Set up your Discord Bot** (required for Discord notifications):
+4. **Set up your Discord Bot**:
    - Go to [Discord Developer Portal](https://discord.com/developers/applications)
-   - Click "New Application" and name it "Nike Stock Alerts"
-   - Go to the "Bot" tab and click "Add Bot"
-   - Under TOKEN, click "Copy" and paste into `.env`:
+   - Click "New Application" → name it "Nike Stock Alerts"
+   - Go to "Bot" tab → Click "Add Bot"
+   - Copy the TOKEN and add to `.env`:
      ```
-     DISCORD_BOT_TOKEN=your-bot-token-here
+     DISCORD_BOT_TOKEN=your-token-here
      ```
-   - Scroll down to "PRIVILEGED GATEWAY INTENTS" and enable:
-     - Server Members Intent
-     - Message Content Intent
+   - Enable "Message Content Intent" under PRIVILEGED GATEWAY INTENTS
    - Go to "OAuth2" → "URL Generator"
-   - Under "scopes", select: `bot`
-   - Under "permissions", select: `Send Messages`, `Embed Links`
-   - Copy the generated URL and open it to add the bot to your server
-   - In your Discord server, right-click a channel and note its ID (enable Developer Mode first in User Settings → Advanced)
-
-5. (Optional) Configure email alerts:
-   - Enable 2-Factor Authentication on your Gmail account
-   - Generate an [App-specific password](https://myaccount.google.com/apppasswords)
+   - Select `bot` under scopes
+   - Select `Send Messages` and `Embed Links` under permissions
+   - Open the generated URL to add bot to your server
+   - Enable Developer Mode in Discord (Settings → Advanced → Developer Mode)
+   - Right-click your Discord channel → Copy Channel ID
    - Add to `.env`:
      ```
-     EMAIL_SERVICE=gmail
-     EMAIL_USER=your-email@gmail.com
-     EMAIL_PASSWORD=your-app-specific-password
+     DISCORD_CHANNEL_ID=your-channel-id-here
      ```
 
 ## Quick Start
 
-### Create a Discord Stock Alert
-
-```bash
-curl -X POST http://localhost:3000/api/alerts \
-  -H "Content-Type: application/json" \
-  -d '{
-    "productId": "HQ4307-002",
-    "productName": "Nike Mind 001",
-    "productUrl": "https://www.nike.com/t/mind-001-mens-pregame-mules-Ky4BSP5I/HQ4307-002",
-    "discordChannelId": "YOUR_CHANNEL_ID_HERE",
-    "notificationMethod": "discord"
-  }'
-```
-
-### Create an Email Stock Alert
-
-```bash
-curl -X POST http://localhost:3000/api/alerts \
-  -H "Content-Type: application/json" \
-  -d '{
-    "productId": "HQ4307-002",
-    "productName": "Nike Mind 001",
-    "productUrl": "https://www.nike.com/t/mind-001-mens-pregame-mules-Ky4BSP5I/HQ4307-002",
-    "userEmail": "your-email@example.com",
-    "notificationMethod": "email",
-    "size": "M"
-  }'
-```
-
-### Start the Server
+That's it! Just start the server:
 
 ```bash
 npm start
 ```
 
-The server will:
-1. Start on port 3000
-2. Initialize the database
-3. Begin monitoring all active alerts every 5 minutes
-4. Send email alerts when products come back in stock
+The bot will:
+1. Connect to Discord
+2. Start monitoring Nike Mind 001 every 5 minutes
+3. Post to your configured channel when it's back in stock
 
 ### Check Stock Manually
 
@@ -114,103 +77,12 @@ The server will:
 npm run check-stock HQ4307-002 https://www.nike.com/t/mind-001-mens-pregame-mules-Ky4BSP5I/HQ4307-002
 ```
 
-## API Endpoints
+## Optional: Manual Stock Check
 
-### Alerts Management
+Check stock manually without waiting for the 5-minute interval:
 
-#### Create Alert
-```
-POST /api/alerts
-```
-**Body:**
-```json
-{
-  "productId": "string",
-  "productName": "string",
-  "productUrl": "string",
-  "userEmail": "string (required for email)",
-  "discordChannelId": "string (required for discord)",
-  "notificationMethod": "email|discord",
-  "size": "string (optional)"
-}
-```
-
-**Examples:**
-- **Discord**: Send alert to Discord channel
-  ```json
-  {
-    "productId": "HQ4307-002",
-    "productName": "Nike Mind 001",
-    "productUrl": "https://www.nike.com/...",
-    "discordChannelId": "1234567890",
-    "notificationMethod": "discord"
-  }
-  ```
-
-- **Email**: Send alert to email
-  ```json
-  {
-    "productId": "HQ4307-002",
-    "productName": "Nike Mind 001",
-    "productUrl": "https://www.nike.com/...",
-    "userEmail": "you@example.com",
-    "notificationMethod": "email"
-  }
-  ```
-
-#### Get User Alerts
-```
-GET /api/alerts/user/:email
-```
-
-#### Get All Active Alerts
-```
-GET /api/alerts
-```
-
-#### Update Alert
-```
-PUT /api/alerts/:id
-```
-**Body:**
-```json
-{
-  "active": true|false
-}
-```
-
-#### Delete Alert
-```
-DELETE /api/alerts/:id
-```
-
-### Stock Checking
-
-#### Check Stock (Manual)
-```
-POST /api/stock/check
-```
-**Body:**
-```json
-{
-  "productSku": "HQ4307-002",
-  "productUrl": "https://www.nike.com/..."
-}
-```
-
-#### Get Stock History
-```
-GET /api/stock/history/:productId?limit=50
-```
-
-#### Get Current Stock Status
-```
-GET /api/stock/status/:productId
-```
-
-#### Trigger Manual Stock Check
-```
-POST /api/stock/check-all
+```bash
+npm run check-stock HQ4307-002 https://www.nike.com/t/mind-001-mens-pregame-mules-Ky4BSP5I/HQ4307-002
 ```
 
 ## Configuration
@@ -271,46 +143,28 @@ npm test
 
 ## Example Use Case
 
-You want to be notified when Nike Mind 001 (HQ4307-002) is back in stock:
+You just want to be notified when Nike Mind 001 is back in stock:
 
-1. **Start the server:**
+1. **Set up your Discord bot** (follow Installation section above)
+2. **Add bot token and channel ID to `.env`**
+3. **Run:**
    ```bash
    npm start
    ```
 
-2. **Create a Discord alert:**
-   ```bash
-   curl -X POST http://localhost:3000/api/alerts \
-     -H "Content-Type: application/json" \
-     -d '{
-       "productId": "HQ4307-002",
-       "productName": "Nike Mind 001 - Mens Pregame Mules",
-       "productUrl": "https://www.nike.com/t/mind-001-mens-pregame-mules-Ky4BSP5I/HQ4307-002",
-       "discordChannelId": "1234567890",
-       "notificationMethod": "discord"
-     }'
-   ```
-
-3. **Wait for notifications** - You'll receive a Discord message in your channel when the product is back in stock at any supported retailer. The bot will post a formatted embed with:
-   - Product name and status
-   - Which retailers have it in stock
-   - Direct link to the product
+Done! The bot will automatically check every 5 minutes and post a Discord message when it finds stock. You'll get a nice formatted embed with:
+- Product name and status
+- Which retailers have it in stock
+- Direct link to buy
 
 ## Troubleshooting
 
-### Email alerts not sending
-- Verify `EMAIL_USER` and `EMAIL_PASSWORD` in `.env`
-- If using Gmail, ensure App-specific password is generated
-- Check server logs for error messages
-
-### Discord alerts not sending
-- Verify `DISCORD_BOT_TOKEN` is set in `.env` and correct
-- Check that the Discord bot is in your server
+### Discord bot not sending alerts
+- Verify `DISCORD_BOT_TOKEN` is correct (check it starts with `ODk...`)
+- Verify `DISCORD_CHANNEL_ID` is correct (should be numbers only)
+- Check that the bot is in your Discord server
 - Verify the bot has "Send Messages" and "Embed Links" permissions
-- Make sure the `discordChannelId` is a valid text channel ID
-- Enable Developer Mode in Discord (User Settings → Advanced)
-- Right-click the target channel to see/copy its ID
-- Check server logs for specific error messages
+- Look at server console output for error messages
 
 ### Stock checks failing
 - Retailer website might have changed HTML structure
