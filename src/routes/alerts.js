@@ -4,27 +4,35 @@ const router = express.Router();
 
 // Create a new stock alert
 router.post('/', (req, res) => {
-  const { productId, productName, productUrl, userEmail, notificationMethod, size } = req.body;
+  const { productId, productName, productUrl, userEmail, webhookUrl, notificationMethod, size } = req.body;
 
-  if (!productId || !productName || !userEmail) {
+  if (!productId || !productName) {
     return res.status(400).json({
-      error: 'productId, productName, and userEmail are required'
+      error: 'productId and productName are required'
     });
   }
 
   const method = notificationMethod || 'email';
 
+  // Validate required fields based on notification method
+  if (method === 'email' && !userEmail) {
+    return res.status(400).json({
+      error: 'userEmail is required for email notifications'
+    });
+  }
+
+  if ((method === 'discord' || method === 'webhook') && !webhookUrl) {
+    return res.status(400).json({
+      error: 'webhookUrl is required for Discord/webhook notifications'
+    });
+  }
+
   db.run(
-    `INSERT INTO alerts (productId, productName, productUrl, userEmail, notificationMethod, size, active)
-     VALUES (?, ?, ?, ?, ?, ?, 1)`,
-    [productId, productName, productUrl, userEmail, method, size || null],
+    `INSERT INTO alerts (productId, productName, productUrl, userEmail, webhookUrl, notificationMethod, size, active)
+     VALUES (?, ?, ?, ?, ?, ?, ?, 1)`,
+    [productId, productName, productUrl, userEmail || null, webhookUrl || null, method, size || null],
     function(err) {
       if (err) {
-        if (err.message.includes('UNIQUE constraint failed')) {
-          return res.status(409).json({
-            error: 'Alert already exists for this product and email'
-          });
-        }
         return res.status(500).json({ error: err.message });
       }
 
@@ -32,8 +40,10 @@ router.post('/', (req, res) => {
         id: this.lastID,
         message: 'Stock alert created successfully',
         productId,
-        userEmail,
-        notificationMethod: method
+        productName,
+        notificationMethod: method,
+        webhookUrl: webhookUrl ? '(hidden)' : undefined,
+        userEmail: userEmail ? '(hidden)' : undefined
       });
     }
   );

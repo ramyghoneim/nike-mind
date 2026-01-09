@@ -18,15 +18,37 @@ db.serialize(() => {
       productId TEXT NOT NULL,
       productName TEXT NOT NULL,
       productUrl TEXT NOT NULL,
-      userEmail TEXT NOT NULL,
+      userEmail TEXT,
+      webhookUrl TEXT,
       notificationMethod TEXT DEFAULT 'email',
       size TEXT,
       createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
       active BOOLEAN DEFAULT 1,
-      notifiedAt DATETIME,
-      UNIQUE(productId, userEmail, size)
+      notifiedAt DATETIME
     )
   `);
+
+  // Add webhookUrl column if it doesn't exist (for existing databases)
+  db.run(`
+    PRAGMA table_info(alerts)
+  `, (err, info) => {
+    if (!err) {
+      db.get(
+        `PRAGMA table_info(alerts) WHERE name='webhookUrl'`,
+        (err, row) => {
+          if (!row && !err) {
+            db.run(`ALTER TABLE alerts ADD COLUMN webhookUrl TEXT`, (err) => {
+              if (err && err.message.includes('duplicate column')) {
+                // Column already exists, ignore
+              } else if (err) {
+                console.error('Error adding webhookUrl column:', err);
+              }
+            });
+          }
+        }
+      );
+    }
+  });
 
   // Stock history table
   db.run(`

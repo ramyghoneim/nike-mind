@@ -60,6 +60,55 @@ const sendWebhookAlert = async (webhookUrl, productName, productUrl, retailer) =
   }
 };
 
+const sendDiscordAlert = async (discordWebhookUrl, productName, productUrl, retailers) => {
+  try {
+    const retailerList = Array.isArray(retailers) ? retailers : [retailers];
+
+    const embed = {
+      title: `🎉 ${productName} is Back in Stock!`,
+      description: `The product you've been waiting for is now available!`,
+      color: 3066993, // Green
+      fields: [
+        {
+          name: 'Available at',
+          value: retailerList.map(r => `• ${r}`).join('\n'),
+          inline: false
+        },
+        {
+          name: 'Product URL',
+          value: `[Click here to view](${productUrl})`,
+          inline: false
+        }
+      ],
+      thumbnail: {
+        url: 'https://www.nike.com/favicon.ico'
+      },
+      footer: {
+        text: 'Nike Mind Stock Alert System',
+        icon_url: 'https://www.nike.com/favicon.ico'
+      },
+      timestamp: new Date().toISOString()
+    };
+
+    await axios.post(discordWebhookUrl, {
+      embeds: [embed],
+      username: 'Nike Stock Alert',
+      avatar_url: 'https://www.nike.com/favicon.ico'
+    }, {
+      timeout: 5000,
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+
+    console.log(`Discord alert sent to webhook for ${productName}`);
+    return true;
+  } catch (error) {
+    console.error('Error sending Discord alert:', error.message);
+    return false;
+  }
+};
+
 const notifyUsersOfStock = async (productId, productName, productUrl, inStockRetailers) => {
   return new Promise((resolve, reject) => {
     db.all(
@@ -86,10 +135,17 @@ const notifyUsersOfStock = async (productId, productName, productUrl, inStockRet
                 productUrl,
                 retailers
               );
+            } else if (alert.notificationMethod === 'discord') {
+              notificationSent = await sendDiscordAlert(
+                alert.webhookUrl,
+                productName,
+                productUrl,
+                inStockRetailers
+              );
             } else if (alert.notificationMethod === 'webhook') {
               const retailers = inStockRetailers.join(', ');
               notificationSent = await sendWebhookAlert(
-                alert.notificationMethod,
+                alert.webhookUrl,
                 productName,
                 productUrl,
                 retailers
@@ -108,7 +164,7 @@ const notifyUsersOfStock = async (productId, productName, productUrl, inStockRet
               results.push({ alertId: alert.id, success: true });
             }
           } catch (error) {
-            console.error(`Error notifying user ${alert.userEmail}:`, error);
+            console.error(`Error notifying user ${alert.userEmail || alert.webhookUrl}:`, error);
             results.push({ alertId: alert.id, success: false, error: error.message });
           }
         }
@@ -135,6 +191,7 @@ const getActiveAlerts = () => {
 module.exports = {
   sendEmailAlert,
   sendWebhookAlert,
+  sendDiscordAlert,
   notifyUsersOfStock,
   getActiveAlerts
 };
