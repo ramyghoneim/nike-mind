@@ -79,7 +79,15 @@ const sendDiscordMessage = async (channelId, productName, productUrl, retailers)
       timestamp: new Date()
     };
 
-    await channel.send({ embeds: [embed] });
+    // Build message with optional user mention
+    const messageContent = process.env.DISCORD_USER_ID
+      ? `<@${process.env.DISCORD_USER_ID}> Stock alert!`
+      : '';
+
+    await channel.send({
+      content: messageContent,
+      embeds: [embed]
+    });
     console.log(`Discord message sent to channel ${channelId} for ${productName}`);
     return true;
   } catch (error) {
