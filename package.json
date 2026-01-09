@@ -1,0 +1,29 @@
+{
+  "name": "nike-mind-stock-alerts",
+  "version": "1.0.0",
+  "description": "Stock alert system for Nike products",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js",
+    "check-stock": "node src/cli/check-stock.js",
+    "test": "jest"
+  },
+  "keywords": ["nike", "stock", "alerts", "monitoring"],
+  "author": "Nike Mind",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "dotenv": "^16.0.3",
+    "axios": "^1.4.0",
+    "cheerio": "^1.0.0-rc.12",
+    "sqlite3": "^5.1.6",
+    "nodemailer": "^6.9.3",
+    "body-parser": "^1.20.2",
+    "cors": "^2.8.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1",
+    "jest": "^29.5.0"
+  }
+}
