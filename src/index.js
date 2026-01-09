@@ -6,6 +6,7 @@ const db = require('./db/database');
 const alertRoutes = require('./routes/alerts');
 const stockRoutes = require('./routes/stock');
 const { startStockMonitoring } = require('./services/stockMonitor');
+const { initializeDiscordBot } = require('./services/discordBot');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -24,8 +25,11 @@ app.get('/health', (req, res) => {
 });
 
 // Start server
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
   console.log(`Nike Mind Stock Alert Server running on port ${PORT}`);
+
+  // Initialize Discord bot
+  await initializeDiscordBot();
 
   // Start background stock monitoring
   startStockMonitoring();

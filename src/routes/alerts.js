@@ -4,7 +4,7 @@ const router = express.Router();
 
 // Create a new stock alert
 router.post('/', (req, res) => {
-  const { productId, productName, productUrl, userEmail, webhookUrl, notificationMethod, size } = req.body;
+  const { productId, productName, productUrl, userEmail, discordChannelId, notificationMethod, size } = req.body;
 
   if (!productId || !productName) {
     return res.status(400).json({
@@ -21,16 +21,16 @@ router.post('/', (req, res) => {
     });
   }
 
-  if ((method === 'discord' || method === 'webhook') && !webhookUrl) {
+  if (method === 'discord' && !discordChannelId) {
     return res.status(400).json({
-      error: 'webhookUrl is required for Discord/webhook notifications'
+      error: 'discordChannelId is required for Discord notifications'
     });
   }
 
   db.run(
-    `INSERT INTO alerts (productId, productName, productUrl, userEmail, webhookUrl, notificationMethod, size, active)
+    `INSERT INTO alerts (productId, productName, productUrl, userEmail, discordChannelId, notificationMethod, size, active)
      VALUES (?, ?, ?, ?, ?, ?, ?, 1)`,
-    [productId, productName, productUrl, userEmail || null, webhookUrl || null, method, size || null],
+    [productId, productName, productUrl, userEmail || null, discordChannelId || null, method, size || null],
     function(err) {
       if (err) {
         return res.status(500).json({ error: err.message });
@@ -42,7 +42,7 @@ router.post('/', (req, res) => {
         productId,
         productName,
         notificationMethod: method,
-        webhookUrl: webhookUrl ? '(hidden)' : undefined,
+        discordChannelId: discordChannelId ? '(hidden)' : undefined,
         userEmail: userEmail ? '(hidden)' : undefined
       });
     }

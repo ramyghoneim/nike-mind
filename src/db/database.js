@@ -19,7 +19,7 @@ db.serialize(() => {
       productName TEXT NOT NULL,
       productUrl TEXT NOT NULL,
       userEmail TEXT,
-      webhookUrl TEXT,
+      discordChannelId TEXT,
       notificationMethod TEXT DEFAULT 'email',
       size TEXT,
       createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -28,27 +28,19 @@ db.serialize(() => {
     )
   `);
 
-  // Add webhookUrl column if it doesn't exist (for existing databases)
-  db.run(`
-    PRAGMA table_info(alerts)
-  `, (err, info) => {
-    if (!err) {
-      db.get(
-        `PRAGMA table_info(alerts) WHERE name='webhookUrl'`,
-        (err, row) => {
-          if (!row && !err) {
-            db.run(`ALTER TABLE alerts ADD COLUMN webhookUrl TEXT`, (err) => {
-              if (err && err.message.includes('duplicate column')) {
-                // Column already exists, ignore
-              } else if (err) {
-                console.error('Error adding webhookUrl column:', err);
-              }
-            });
+  // Add discordChannelId column if it doesn't exist (for existing databases)
+  db.get(
+    `PRAGMA table_info(alerts) WHERE name='discordChannelId'`,
+    (err, row) => {
+      if (!row && !err) {
+        db.run(`ALTER TABLE alerts ADD COLUMN discordChannelId TEXT`, (err) => {
+          if (err && !err.message.includes('duplicate column')) {
+            console.error('Error adding discordChannelId column:', err);
           }
-        }
-      );
+        });
+      }
     }
-  });
+  );
 
   // Stock history table
   db.run(`

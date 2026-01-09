@@ -38,7 +38,24 @@ npm install
 cp .env.example .env
 ```
 
-4. (Optional) Configure email alerts:
+4. **Set up your Discord Bot** (required for Discord notifications):
+   - Go to [Discord Developer Portal](https://discord.com/developers/applications)
+   - Click "New Application" and name it "Nike Stock Alerts"
+   - Go to the "Bot" tab and click "Add Bot"
+   - Under TOKEN, click "Copy" and paste into `.env`:
+     ```
+     DISCORD_BOT_TOKEN=your-bot-token-here
+     ```
+   - Scroll down to "PRIVILEGED GATEWAY INTENTS" and enable:
+     - Server Members Intent
+     - Message Content Intent
+   - Go to "OAuth2" → "URL Generator"
+   - Under "scopes", select: `bot`
+   - Under "permissions", select: `Send Messages`, `Embed Links`
+   - Copy the generated URL and open it to add the bot to your server
+   - In your Discord server, right-click a channel and note its ID (enable Developer Mode first in User Settings → Advanced)
+
+5. (Optional) Configure email alerts:
    - Enable 2-Factor Authentication on your Gmail account
    - Generate an [App-specific password](https://myaccount.google.com/apppasswords)
    - Add to `.env`:
@@ -47,14 +64,6 @@ cp .env.example .env
      EMAIL_USER=your-email@gmail.com
      EMAIL_PASSWORD=your-app-specific-password
      ```
-
-5. (Optional) Get your Discord webhook URL:
-   - Open your Discord server and go to a channel where you want stock alerts
-   - Right-click the channel → Edit Channel
-   - Go to Integrations → Webhooks
-   - Click "New Webhook"
-   - Give it a name (e.g., "Nike Stock Alerts")
-   - Copy the webhook URL - you'll use this when creating alerts
 
 ## Quick Start
 
@@ -67,7 +76,7 @@ curl -X POST http://localhost:3000/api/alerts \
     "productId": "HQ4307-002",
     "productName": "Nike Mind 001",
     "productUrl": "https://www.nike.com/t/mind-001-mens-pregame-mules-Ky4BSP5I/HQ4307-002",
-    "webhookUrl": "https://discordapp.com/api/webhooks/YOUR_WEBHOOK_ID/YOUR_WEBHOOK_TOKEN",
+    "discordChannelId": "YOUR_CHANNEL_ID_HERE",
     "notificationMethod": "discord"
   }'
 ```
@@ -120,8 +129,8 @@ POST /api/alerts
   "productName": "string",
   "productUrl": "string",
   "userEmail": "string (required for email)",
-  "webhookUrl": "string (required for discord/webhook)",
-  "notificationMethod": "email|discord|webhook",
+  "discordChannelId": "string (required for discord)",
+  "notificationMethod": "email|discord",
   "size": "string (optional)"
 }
 ```
@@ -133,7 +142,7 @@ POST /api/alerts
     "productId": "HQ4307-002",
     "productName": "Nike Mind 001",
     "productUrl": "https://www.nike.com/...",
-    "webhookUrl": "https://discordapp.com/api/webhooks/...",
+    "discordChannelId": "1234567890",
     "notificationMethod": "discord"
   }
   ```
@@ -277,12 +286,15 @@ You want to be notified when Nike Mind 001 (HQ4307-002) is back in stock:
        "productId": "HQ4307-002",
        "productName": "Nike Mind 001 - Mens Pregame Mules",
        "productUrl": "https://www.nike.com/t/mind-001-mens-pregame-mules-Ky4BSP5I/HQ4307-002",
-       "webhookUrl": "https://discordapp.com/api/webhooks/YOUR_ID/YOUR_TOKEN",
+       "discordChannelId": "1234567890",
        "notificationMethod": "discord"
      }'
    ```
 
-3. **Wait for notifications** - You'll receive a Discord message in your channel when the product is back in stock at any supported retailer
+3. **Wait for notifications** - You'll receive a Discord message in your channel when the product is back in stock at any supported retailer. The bot will post a formatted embed with:
+   - Product name and status
+   - Which retailers have it in stock
+   - Direct link to the product
 
 ## Troubleshooting
 
@@ -292,9 +304,12 @@ You want to be notified when Nike Mind 001 (HQ4307-002) is back in stock:
 - Check server logs for error messages
 
 ### Discord alerts not sending
-- Verify the webhook URL is correct and hasn't expired
-- Check that the Discord bot has permission to post in the channel
-- Make sure the webhook URL includes both ID and token parts
+- Verify `DISCORD_BOT_TOKEN` is set in `.env` and correct
+- Check that the Discord bot is in your server
+- Verify the bot has "Send Messages" and "Embed Links" permissions
+- Make sure the `discordChannelId` is a valid text channel ID
+- Enable Developer Mode in Discord (User Settings → Advanced)
+- Right-click the target channel to see/copy its ID
 - Check server logs for specific error messages
 
 ### Stock checks failing
