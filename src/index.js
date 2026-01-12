@@ -7,6 +7,7 @@ const alertRoutes = require('./routes/alerts');
 const stockRoutes = require('./routes/stock');
 const { startStockMonitoring } = require('./services/stockMonitor');
 const { initializeDiscordBot } = require('./services/discordBot');
+const { startWebsiteMonitoring } = require('./services/websiteMonitor');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -33,6 +34,9 @@ app.listen(PORT, async () => {
 
   // Start background stock monitoring
   startStockMonitoring();
+
+  // Start website change monitoring for buynyctoken.com
+  startWebsiteMonitoring();
 });
 
 module.exports = app;
