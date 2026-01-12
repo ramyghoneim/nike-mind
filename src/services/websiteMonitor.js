@@ -1,6 +1,8 @@
+console.log('Loading websiteMonitor module...');
 const axios = require('axios');
 const crypto = require('crypto');
 const { ChannelType } = require('discord.js');
+console.log('websiteMonitor module loaded successfully');
 
 let monitoringActive = false;
 let previousHash = null;

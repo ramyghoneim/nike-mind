@@ -36,7 +36,13 @@ app.listen(PORT, async () => {
   startStockMonitoring();
 
   // Start website change monitoring for buynyctoken.com
-  startWebsiteMonitoring();
+  console.log('About to start website monitoring...');
+  try {
+    startWebsiteMonitoring();
+    console.log('Website monitoring call completed');
+  } catch (err) {
+    console.error('Error starting website monitoring:', err);
+  }
 });
 
 module.exports = app;
