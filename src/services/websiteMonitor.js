@@ -1,12 +1,10 @@
 const axios = require('axios');
 const crypto = require('crypto');
-const { isDiscordBotReady } = require('./discordBot');
-const { Client, GatewayIntentBits, ChannelType } = require('discord.js');
+const { ChannelType } = require('discord.js');
 
 let monitoringActive = false;
 let previousHash = null;
-let previousContent = null;
-const CHECK_INTERVAL = process.env.WEBSITE_CHECK_INTERVAL_MS || 1000; // 1 second default
+const CHECK_INTERVAL = parseInt(process.env.WEBSITE_CHECK_INTERVAL_MS) || 1000;
 const WEBSITE_URL = 'https://buynyctoken.com/';
 
 const generateContentHash = (content) => {
@@ -33,11 +31,10 @@ const fetchWebsiteContent = async () => {
 };
 
 const sendWebsiteChangeNotification = async (channelId, url, changeDetails) => {
-  const { Client, GatewayIntentBits, ChannelType } = require('discord.js');
   const discordBot = require('./discordBot');
 
   if (!discordBot.isDiscordBotReady()) {
-    console.error('Discord bot is not ready');
+    console.error('Discord bot is not ready for website notification');
     return false;
   }
 
@@ -109,8 +106,7 @@ const checkForChanges = async () => {
   if (previousHash === null) {
     // First run - store initial state
     previousHash = currentHash;
-    previousContent = content;
-    console.log(`Initial content hash stored: ${currentHash}`);
+        console.log(`Initial content hash stored: ${currentHash}`);
     return;
   }
 
@@ -120,8 +116,9 @@ const checkForChanges = async () => {
     console.log(`New hash: ${currentHash}`);
 
     // Send Discord notification
+    const discordBot = require('./discordBot');
     const channelId = process.env.DISCORD_CHANNEL_ID;
-    if (channelId && isDiscordBotReady()) {
+    if (channelId && discordBot.isDiscordBotReady()) {
       await sendWebsiteChangeNotification(
         channelId,
         WEBSITE_URL,
@@ -135,8 +132,7 @@ const checkForChanges = async () => {
 
     // Update stored hash
     previousHash = currentHash;
-    previousContent = content;
-  } else {
+      } else {
     console.log(`No changes detected (hash: ${currentHash.substring(0, 8)}...)`);
   }
 };
