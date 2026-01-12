@@ -6,7 +6,7 @@ const { Client, GatewayIntentBits, ChannelType } = require('discord.js');
 let monitoringActive = false;
 let previousHash = null;
 let previousContent = null;
-const CHECK_INTERVAL = process.env.WEBSITE_CHECK_INTERVAL_MS || 5000; // 5 seconds default
+const CHECK_INTERVAL = process.env.WEBSITE_CHECK_INTERVAL_MS || 1000; // 1 second default
 const WEBSITE_URL = 'https://buynyctoken.com/';
 
 const generateContentHash = (content) => {
