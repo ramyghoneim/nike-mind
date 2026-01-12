@@ -106,7 +106,7 @@ const checkForChanges = async () => {
   if (previousHash === null) {
     // First run - store initial state
     previousHash = currentHash;
-        console.log(`Initial content hash stored: ${currentHash}`);
+    console.log(`Initial content hash stored: ${currentHash}`);
     return;
   }
 
@@ -132,7 +132,7 @@ const checkForChanges = async () => {
 
     // Update stored hash
     previousHash = currentHash;
-      } else {
+  } else {
     console.log(`No changes detected (hash: ${currentHash.substring(0, 8)}...)`);
   }
 };
